@@ -1,6 +1,8 @@
+Author - Khyathi
+
 CURRENCY CONVERTER API - QUICK REFERENCE
 
-BASE URL: https://2p9nh463r1.execute-api.us-east-1.amazonaws.com/prod/
+BASE URL: https://2p9nh463r1.execute-api.us-east-1.amazonaws.com/prod
 
 
 ---
@@ -30,11 +32,6 @@ Response:
 }
 
 ---
-
-
-
-
-
 
 
 

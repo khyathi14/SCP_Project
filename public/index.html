@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Currency Converter</title>
+    <title>Personal Finance Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .loader {
             border: 3px solid #f3f3f3;
@@ -19,155 +20,990 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .stat-card {
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        .section-content {
+            display: none;
+        }
+        .section-content.active {
+            display: block;
+        }
+        .nav-item {
+            transition: all 0.2s;
+        }
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .nav-item.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-left: 4px solid white;
+        }
     </style>
 </head>
-<body class="bg-white min-h-screen flex flex-col">
+<body class="bg-gray-50 min-h-screen">
     <!-- Header -->
-    <header class="bg-blue-600 text-white py-4 px-6">
-        <h1 class="text-2xl font-semibold">Currency Convert and Save</h1>
+    <header class="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-6 px-6 shadow-lg">
+        <div class="max-w-full mx-auto">
+            <h1 class="text-3xl font-bold">💰 Personal Finance Tracker</h1>
+            <p class="text-blue-100 mt-1">Manage your income and expenses with ease</p>
+        </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="flex-1 px-6 py-6">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl mx-auto">
-            <!-- Left Side - Converter and Countries -->
-            <div class="space-y-6">
-                <!-- Converter -->
-                <div class="bg-white border border-gray-300 rounded-lg">
-                    <div class="bg-gray-100 border-b border-gray-300 px-4 py-3">
-                        <h2 class="font-semibold text-gray-800" id="formTitle">Currency Converter</h2>
-                    </div>
-                    <div class="p-6">
-                        <form id="conversionForm">
-                        <input type="hidden" id="editId" value="">
-                        
-                        <div class="grid grid-cols-2 gap-4 mb-4">
+    <!-- Main Container with Sidebar -->
+    <div class="flex min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-gradient-to-b from-gray-800 to-gray-900 text-white shadow-xl">
+            <nav class="p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <button onclick="showSection('dashboard')" class="nav-item active w-full text-left px-4 py-3 rounded-lg flex items-center gap-3" id="nav-dashboard">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                            </svg>
+                            <span class="font-medium">Dashboard</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="showSection('transactions')" class="nav-item w-full text-left px-4 py-3 rounded-lg flex items-center gap-3" id="nav-transactions">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                            </svg>
+                            <span class="font-medium">Transactions</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="showSection('analytics')" class="nav-item w-full text-left px-4 py-3 rounded-lg flex items-center gap-3" id="nav-analytics">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                            <span class="font-medium">Analytics</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="showSection('explorer')" class="nav-item w-full text-left px-4 py-3 rounded-lg flex items-center gap-3" id="nav-explorer">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5h2m-1 0v14m8-7H4"></path>
+                            </svg>
+                            <span class="font-medium">Currency Explorer</span>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+            </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 p-6">
+            
+            <!-- DASHBOARD SECTION -->
+            <div id="section-dashboard" class="section-content active">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Dashboard Overview</h2>
+                
+                <!-- Dashboard Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="stat-card bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
+                        <div class="flex justify-between items-start">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">From Currency</label>
-                                <input type="text" id="fromCurrency" list="currencyList" 
-                                       class="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:border-blue-600"
-                                       placeholder="USD" required>
+                                <p class="text-gray-600 text-sm font-medium">Total Income</p>
+                                <p class="text-2xl font-bold text-green-600 mt-1" id="totalIncome">$0.00</p>
                             </div>
-                            
+                            <div class="bg-green-100 p-3 rounded-full">
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card bg-white rounded-lg shadow p-6 border-l-4 border-red-500">
+                        <div class="flex justify-between items-start">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">To Currency</label>
-                                <input type="text" id="toCurrency" list="currencyList"
-                                       class="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:border-blue-600"
-                                       placeholder="EUR" required>
+                                <p class="text-gray-600 text-sm font-medium">Total Expenses</p>
+                                <p class="text-2xl font-bold text-red-600 mt-1" id="totalExpenses">$0.00</p>
+                            </div>
+                            <div class="bg-red-100 p-3 rounded-full">
+                                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                                </svg>
                             </div>
                         </div>
-                        
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
-                            <input type="number" id="amount" step="0.01"
-                                   class="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:border-blue-600"
-                                   placeholder="100" required>
-                        </div>
-                        
-                        <datalist id="currencyList"></datalist>
-                        
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Result</label>
-                            <div class="w-full px-3 py-4 border border-gray-400 rounded bg-gray-50">
-                                <span id="result" class="text-xl font-semibold text-gray-800">--</span>
-                                <span id="convertLoader" class="loader ml-2 hidden"></span>
+                    </div>
+
+                    <div class="stat-card bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-600 text-sm font-medium">Balance</p>
+                                <p class="text-2xl font-bold text-blue-600 mt-1" id="balance">$0.00</p>
+                            </div>
+                            <div class="bg-blue-100 p-3 rounded-full">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path>
+                                </svg>
                             </div>
                         </div>
-                        
-                        <div class="flex gap-3">
-                            <button type="button" id="convertBtn" 
-                                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded">
-                                Convert
-                            </button>
-                            <button type="submit" 
-                                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded">
-                                Save
-                            </button>
-                            <button type="button" id="cancelBtn" 
-                                    class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded hidden">
-                                Cancel
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Countries using the Currencies - Split View -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- From Currency Countries -->
-                <div id="fromCountriesSection" class="bg-white border border-gray-300 rounded-lg hidden">
-                    <div class="bg-gray-100 border-b border-gray-300 px-4 py-3 flex justify-between items-center">
-                        <h2 class="font-semibold text-gray-800">From: <span id="fromSelectedCurrency" class="text-blue-600"></span></h2>
-                        <span id="fromCountriesLoader" class="loader hidden"></span>
                     </div>
-                    <div class="p-4 overflow-y-auto" style="max-height: 400px;">
-                        <div id="fromCountriesList" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <!-- Countries will be dynamically inserted here -->
+
+                    <div class="stat-card bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-600 text-sm font-medium">Transactions</p>
+                                <p class="text-2xl font-bold text-purple-600 mt-1" id="transactionCount">0</p>
+                            </div>
+                            <div class="bg-purple-100 p-3 rounded-full">
+                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                </svg>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- To Currency Countries -->
-                <div id="toCountriesSection" class="bg-white border border-gray-300 rounded-lg hidden">
-                    <div class="bg-gray-100 border-b border-gray-300 px-4 py-3 flex justify-between items-center">
-                        <h2 class="font-semibold text-gray-800">To: <span id="toSelectedCurrency" class="text-blue-600"></span></h2>
-                        <span id="toCountriesLoader" class="loader hidden"></span>
+                <!-- Quick Actions -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">📊 Recent Activity</h3>
+                        <div id="dashboardTransactionsList" class="space-y-3 max-h-64 overflow-y-auto">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
                     </div>
-                    <div class="p-4 overflow-y-auto" style="max-height: 400px;">
-                        <div id="toCountriesList" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <!-- Countries will be dynamically inserted here -->
+
+
+                </div>
+            </div>
+
+            <!-- TRANSACTIONS SECTION -->
+            <div id="section-transactions" class="section-content">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Manage Transactions</h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Add/Edit Transaction Form -->
+                    <div class="lg:col-span-1">
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                            <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+                                <h2 class="text-xl font-semibold text-white" id="formTitle">Add Transaction</h2>
+                            </div>
+                            <div class="p-6">
+                                <form id="transactionForm" class="space-y-4">
+                                    <input type="hidden" id="editId" value="">
+                                    <input type="hidden" id="transactionConvertedAmount" value="">
+                                    <input type="hidden" id="transactionToCurrency" value="">
+                                    
+                                    <!-- Section 1: Type -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                                        <select id="type" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                            <option value="income">Income</option>
+                                            <option value="expense">Expense</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Section 2: Category -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                                        <select id="category" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                            <optgroup label="Income">
+                                                <option value="Salary">Salary</option>
+                                                <option value="Freelance">Freelance</option>
+                                                <option value="Investment">Investment</option>
+                                                <option value="Gift">Gift</option>
+                                                <option value="Other Income">Other Income</option>
+                                            </optgroup>
+                                            <optgroup label="Expense">
+                                                <option value="Food">Food</option>
+                                                <option value="Transport">Transport</option>
+                                                <option value="Shopping">Shopping</option>
+                                                <option value="Entertainment">Entertainment</option>
+                                                <option value="Bills">Bills</option>
+                                                <option value="Healthcare">Healthcare</option>
+                                                <option value="Education">Education</option>
+                                                <option value="Other Expense">Other Expense</option>
+                                            </optgroup>
+                                        </select>
+                                    </div>
+
+                                    <!-- Section 3: Currency Converter -->
+                                    <div class="border-2 border-blue-200 rounded-lg p-4 bg-blue-50">
+                                        <h3 class="text-sm font-semibold text-gray-800 mb-3">Currency Converter</h3>
+                                        
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">From</label>
+                                            <select id="convertFrom" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                                                <option value="">Select currency</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="mt-2">
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">To</label>
+                                            <select id="convertTo" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                                                <option value="">Select currency</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="mt-2">
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Amount</label>
+                                            <input type="number" id="convertAmount" step="0.01" min="0" 
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                                   placeholder="Enter amount">
+                                        </div>
+
+                                        <button type="button" id="convertTransactionBtn" onclick="convertCurrencyInForm()"
+                                                class="w-full mt-3 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-3 rounded text-sm transition duration-200">
+                                            Convert
+                                        </button>
+
+                                        <div class="mt-3 p-3 bg-white rounded border border-gray-300">
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Result</label>
+                                            <div class="text-lg font-semibold text-blue-600">
+                                                <span id="transactionConversionResult">--</span>
+                                                <span id="transactionConvertLoader" class="loader ml-2 hidden"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                                        <textarea id="description" required rows="3"
+                                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                  placeholder="Enter transaction details..."></textarea>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                                        <input type="date" id="date" required 
+                                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    </div>
+
+                                    <div class="flex gap-2">
+                                        <button type="submit" 
+                                                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-200">
+                                            Save Transaction
+                                        </button>
+                                        <button type="button" id="cancelBtn" 
+                                                class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-200 hidden">
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transactions List -->
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                            <div class="bg-gradient-to-r from-gray-700 to-gray-800 px-6 py-4 flex justify-between items-center">
+                                <h2 class="text-xl font-semibold text-white">All Transactions</h2>
+                                <span id="transactionsLoader" class="loader hidden"></span>
+                            </div>
+                            <div class="p-6">
+                                <!-- Filters -->
+                                <div class="flex gap-3 mb-4 flex-wrap">
+                                    <select id="filterType" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                        <option value="">All Types</option>
+                                        <option value="income">Income</option>
+                                        <option value="expense">Expense</option>
+                                    </select>
+                                    <select id="filterCategory" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                        <option value="">All Categories</option>
+                                    </select>
+                                    <button id="applyFilters" class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                                        Apply Filters
+                                    </button>
+                                </div>
+
+                                <div id="transactionsList" class="space-y-3 max-h-96 overflow-y-auto">
+                                    <!-- Transactions will be loaded here -->
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-            <!-- Right Side - Saved Records -->
-            <div class="bg-white border border-gray-300 rounded-lg">
-                <div class="bg-gray-100 border-b border-gray-300 px-4 py-3 flex justify-between items-center">
-                    <h2 class="font-semibold text-gray-800">Saved Conversions</h2>
-                    <span id="recordsLoader" class="loader hidden"></span>
-                </div>
-                <div class="p-4 overflow-y-auto" style="max-height: 600px;">
-                    <div id="recordsList">
-                        <!-- Records will be dynamically inserted here -->
+            <!-- ANALYTICS SECTION -->
+            <div id="section-analytics" class="section-content">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Financial Analytics</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Pie Chart -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">📊 Expense Breakdown</h3>
+                        <canvas id="expenseChart"></canvas>
+                    </div>
+
+                    <!-- Bar Chart -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">📈 Monthly Trends</h3>
+                        <canvas id="monthlyChart"></canvas>
+                    </div>
+
+                    <!-- Category Analysis -->
+                    <div class="bg-white rounded-lg shadow-md p-6 col-span-2">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">📋 Category Breakdown</h3>
+                        <div id="categoryAnalysis" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </main>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-6 px-6 border-t border-gray-700 mt-8">
-        <div class="max-w-7xl mx-auto">
-            <div class="text-center">
-                <p id="quoteText" class="text-lg italic">Loading quote...</p>
+
+            <!-- CURRENCY EXPLORER SECTION -->
+            <div id="section-explorer" class="section-content">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Currency Explorer</h2>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-1">
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                            <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4">
+                                <h2 class="text-xl font-semibold text-white">Explore by Currency</h2>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Currency</label>
+                                    <select id="explorerCurrency" onchange="loadExplorerCountries()" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                        <option value="">Select currency</option>
+                                    </select>
+                                </div>
+                                <div class="text-xs text-gray-500">Uses REST Countries API to list countries using this currency.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                            <div class="bg-gradient-to-r from-gray-700 to-gray-800 px-6 py-4 flex justify-between items-center">
+                                <h2 class="text-xl font-semibold text-white">Countries Using This Currency</h2>
+                                <span id="explorerLoader" class="loader hidden"></span>
+                            </div>
+                            <div class="p-6">
+                                <div id="explorerResults" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="text-gray-500">Select a currency to see countries.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+        </main>
+    </div>
+
+    <footer class="bg-gray-800 text-white py-8 px-6">
+        <div class="max-w-full mx-auto text-center">
+            <p id="quoteText" class="text-lg italic text-gray-300">Loading financial wisdom...</p>
         </div>
     </footer>
 
     <script>
+        // Global variables
+        let transactions = [];
+        let expenseChart = null;
+        let monthlyChart = null;
         let currencies = [];
-        let currentResult = 0;
 
-        // Load currencies on page load
-        async function loadCurrencies() {
-            try {
-                const response = await fetch('https://2p9nh463r1.execute-api.us-east-1.amazonaws.com/prod/currencies');
-                const data = await response.json();
-                currencies = data.currencies;
-                
-                const datalist = document.getElementById('currencyList');
-                datalist.innerHTML = currencies.map(curr => `<option value="${curr}">`).join('');
-            } catch (error) {
-                console.error('Error loading currencies:', error);
+        // Set today's date as default
+        document.getElementById('date').valueAsDate = new Date();
+
+        // ============================================
+        // NAVIGATION FUNCTIONS
+        // ============================================
+
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.section-content').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Remove active class from all nav items
+            document.querySelectorAll('.nav-item').forEach(nav => {
+                nav.classList.remove('active');
+            });
+
+            // Show selected section
+            document.getElementById('section-' + sectionName).classList.add('active');
+            document.getElementById('nav-' + sectionName).classList.add('active');
+
+            // Load section-specific data
+            if (sectionName === 'dashboard') {
+                updateDashboard();
+            } else if (sectionName === 'transactions') {
+                loadCurrencies();
+            } else if (sectionName === 'analytics') {
+                updateCharts();
+                updateCategoryAnalysis();
+            } else if (sectionName === 'explorer') {
+                loadCurrencies();
             }
         }
 
-        // Fetch and display countries using a currency (for "from" currency)
+        // ============================================
+        // DATA LOADING FUNCTIONS
+        // ============================================
+
+        async function loadTransactions(filters = {}) {
+            const loader = document.getElementById('transactionsLoader');
+            if (loader) loader.classList.remove('hidden');
+            
+            try {
+                let url = '/api/transactions';
+                const params = new URLSearchParams(filters);
+                if (params.toString()) url += '?' + params.toString();
+                
+                const response = await fetch(url);
+                transactions = await response.json();
+                
+                displayTransactions(transactions);
+                updateSummaryStats();
+                updateCharts();
+                updateDashboard();
+                populateCategoryFilter();
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+            } finally {
+                if (loader) loader.classList.add('hidden');
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats/summary');
+                const stats = await response.json();
+                
+                document.getElementById('totalIncome').textContent = '$' + stats.totalIncome.toFixed(2);
+                document.getElementById('totalExpenses').textContent = '$' + stats.totalExpenses.toFixed(2);
+                document.getElementById('balance').textContent = '$' + stats.balance.toFixed(2);
+                document.getElementById('transactionCount').textContent = stats.transactionCount;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        function displayTransactions(transactions) {
+            const container = document.getElementById('transactionsList');
+            
+            if (!container) return;
+            
+            if (transactions.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500 py-8">No transactions found</p>';
+                return;
+            }
+            
+            container.innerHTML = transactions.map(t => `
+                <div class="border-l-4 ${t.type === 'income' ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'} rounded-lg p-4 hover:shadow-md transition">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <span class="font-semibold text-lg ${t.type === 'income' ? 'text-green-700' : 'text-red-700'}">
+                                    ${t.type === 'income' ? '+' : '-'}${t.amount} ${t.currency}
+                                </span>
+                                ${t.convertedAmount ? `<span class="font-semibold text-sm text-blue-600">(${t.convertedAmount} ${t.toCurrency})</span>` : ''}
+                                <span class="px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded-full">${t.category}</span>
+                            </div>
+                            <p class="text-gray-600 text-sm mt-1">${t.description}</p>
+                            <p class="text-gray-500 text-xs mt-1">${new Date(t.date).toLocaleDateString()}</p>
+                        </div>
+                        <div class="flex gap-2 ml-4">
+                            <button onclick="editTransaction('${t._id}')" 
+                                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 text-sm rounded">
+                                Edit
+                            </button>
+                            <button onclick="deleteTransaction('${t._id}')" 
+                                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 text-sm rounded">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateSummaryStats() {
+            const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+            const totalExpenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+            const balance = totalIncome - totalExpenses;
+            
+            document.getElementById('totalIncome').textContent = '$' + totalIncome.toFixed(2);
+            document.getElementById('totalExpenses').textContent = '$' + totalExpenses.toFixed(2);
+            document.getElementById('balance').textContent = '$' + balance.toFixed(2);
+            document.getElementById('transactionCount').textContent = transactions.length;
+        }
+
+        // ============================================
+        // DASHBOARD FUNCTIONS
+        // ============================================
+
+        function updateDashboard() {
+            // Update recent transactions on dashboard
+            const container = document.getElementById('dashboardTransactionsList');
+            if (!container) return;
+
+            const recentTransactions = transactions.slice(0, 5);
+            
+            if (recentTransactions.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500 py-4">No recent transactions</p>';
+                return;
+            }
+            
+            container.innerHTML = recentTransactions.map(t => `
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <div>
+                        <p class="font-semibold text-sm ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}">
+                            ${t.type === 'income' ? '+' : '-'}$${t.amount}
+                        </p>
+                        <p class="text-xs text-gray-600">${t.category}</p>
+                    </div>
+                    <div class="text-xs text-gray-500">${new Date(t.date).toLocaleDateString()}</div>
+                </div>
+            `).join('');
+
+        }
+
+        // ============================================
+        // CHART FUNCTIONS (Using Chart.js)
+        // ============================================
+
+        function updateCharts() {
+            updateExpenseChart();
+            updateMonthlyChart();
+        }
+
+        function updateExpenseChart() {
+            const ctx = document.getElementById('expenseChart');
+            if (!ctx) return;
+
+            const expenses = transactions.filter(t => t.type === 'expense');
+            const categoryTotals = {};
+            
+            expenses.forEach(t => {
+                categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.amount;
+            });
+            
+            if (expenseChart) {
+                expenseChart.destroy();
+            }
+            
+            expenseChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(categoryTotals),
+                    datasets: [{
+                        data: Object.values(categoryTotals),
+                        backgroundColor: [
+                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
+                            '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateMonthlyChart() {
+            const ctx = document.getElementById('monthlyChart');
+            if (!ctx) return;
+
+            const monthlyData = {};
+            
+            transactions.forEach(t => {
+                const month = new Date(t.date).toISOString().substring(0, 7);
+                if (!monthlyData[month]) {
+                    monthlyData[month] = { income: 0, expense: 0 };
+                }
+                monthlyData[month][t.type] += t.amount;
+            });
+            
+            const sortedMonths = Object.keys(monthlyData).sort();
+            const incomeData = sortedMonths.map(m => monthlyData[m].income);
+            const expenseData = sortedMonths.map(m => monthlyData[m].expense);
+            
+            if (monthlyChart) {
+                monthlyChart.destroy();
+            }
+            
+            monthlyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedMonths,
+                    datasets: [
+                        {
+                            label: 'Income',
+                            data: incomeData,
+                            backgroundColor: '#10B981'
+                        },
+                        {
+                            label: 'Expenses',
+                            data: expenseData,
+                            backgroundColor: '#EF4444'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCategoryAnalysis() {
+            const container = document.getElementById('categoryAnalysis');
+            if (!container) return;
+
+            const categoryTotals = {};
+            transactions.forEach(t => {
+                if (!categoryTotals[t.category]) {
+                    categoryTotals[t.category] = { amount: 0, count: 0 };
+                }
+                categoryTotals[t.category].amount += t.amount;
+                categoryTotals[t.category].count += 1;
+            });
+
+            const sortedCategories = Object.entries(categoryTotals)
+                .sort((a, b) => b[1].amount - a[1].amount)
+                .slice(0, 6);
+
+            if (sortedCategories.length === 0) {
+                container.innerHTML = '<p class="col-span-3 text-center text-gray-500 py-4">No data available</p>';
+                return;
+            }
+
+            container.innerHTML = sortedCategories.map(([cat, data]) => `
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-gray-800">${cat}</h4>
+                    <p class="text-2xl font-bold text-blue-600 mt-2">$${data.amount.toFixed(2)}</p>
+                    <p class="text-sm text-gray-600">${data.count} transaction${data.count > 1 ? 's' : ''}</p>
+                </div>
+            `).join('');
+        }
+
+        // ============================================
+        // CRUD OPERATIONS
+        // ============================================
+
+        async function saveTransaction(event) {
+            event.preventDefault();
+            
+            const editId = document.getElementById('editId').value;
+            const convertedAmountStr = document.getElementById('transactionConvertedAmount').value;
+            const toCurrencyStr = document.getElementById('transactionToCurrency').value;
+            
+            const data = {
+                type: document.getElementById('type').value,
+                category: document.getElementById('category').value,
+                amount: parseFloat(document.getElementById('convertAmount').value) || 0,
+                currency: document.getElementById('convertFrom').value,
+                description: document.getElementById('description').value,
+                date: document.getElementById('date').value,
+                convertedAmount: convertedAmountStr ? parseFloat(convertedAmountStr) : null,
+                toCurrency: toCurrencyStr || null
+            };
+            
+            try {
+                let response;
+                if (editId) {
+                    response = await fetch(`/api/transactions/${editId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    response = await fetch('/api/transactions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                }
+                
+                if (response.ok) {
+                    resetForm();
+                    loadTransactions();
+                    loadStats();
+                }
+            } catch (error) {
+                console.error('Error saving transaction:', error);
+                alert('Error saving transaction');
+            }
+        }
+
+        async function editTransaction(id) {
+            try {
+                const response = await fetch(`/api/transactions/${id}`);
+                const transaction = await response.json();
+                
+                // Switch to transactions section
+                showSection('transactions');
+                
+                document.getElementById('editId').value = transaction._id;
+                document.getElementById('type').value = transaction.type;
+                document.getElementById('category').value = transaction.category;
+                document.getElementById('convertAmount').value = transaction.amount;
+                document.getElementById('convertFrom').value = transaction.currency;
+                document.getElementById('description').value = transaction.description;
+                document.getElementById('date').value = new Date(transaction.date).toISOString().split('T')[0];
+                
+                // Populate converter fields if available
+                if (transaction.toCurrency) {
+                    document.getElementById('convertTo').value = transaction.toCurrency;
+                    document.getElementById('transactionConvertedAmount').value = transaction.convertedAmount || '';
+                    document.getElementById('transactionToCurrency').value = transaction.toCurrency;
+                    if (transaction.convertedAmount) {
+                        document.getElementById('transactionConversionResult').textContent = 
+                            `${transaction.amount} ${transaction.currency} = ${transaction.convertedAmount} ${transaction.toCurrency}`;
+                    }
+                }
+                
+                document.getElementById('formTitle').textContent = 'Edit Transaction';
+                document.getElementById('cancelBtn').classList.remove('hidden');
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (error) {
+                console.error('Error loading transaction:', error);
+            }
+        }
+
+        async function deleteTransaction(id) {
+            if (!confirm('Are you sure you want to delete this transaction?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/transactions/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    loadTransactions();
+                    loadStats();
+                }
+            } catch (error) {
+                console.error('Error deleting transaction:', error);
+                alert('Error deleting transaction');
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('transactionForm').reset();
+            document.getElementById('editId').value = '';
+            document.getElementById('date').valueAsDate = new Date();
+            document.getElementById('formTitle').textContent = 'Add Transaction';
+            document.getElementById('cancelBtn').classList.add('hidden');
+            
+            // Reset converter fields
+            document.getElementById('transactionConvertedAmount').value = '';
+            document.getElementById('transactionToCurrency').value = '';
+            document.getElementById('transactionConversionResult').textContent = '--';
+        }
+
+        // ============================================
+        // CURRENCY CONVERTER WITH COUNTRIES
+        // ============================================
+
+        async function loadCurrencies() {
+            try {
+                const response = await fetch('https://2p9nh463r1.execute-api.us-east-1.amazonaws.com/prod/currencies');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                const list = Array.isArray(data.currencies) ? data.currencies : [];
+
+                currencies = list;
+
+                const datalist = document.getElementById('currencyList');
+                if (datalist) {
+                    datalist.innerHTML = list.map(curr => `<option value="${curr}">`).join('');
+                }
+
+                populateTransactionCurrencySelects(list);
+                populateExplorerCurrencySelect(list);
+            } catch (error) {
+                console.error('Error loading currencies:', error);
+                populateTransactionCurrencySelects([]);
+                populateExplorerCurrencySelect([]);
+            }
+        }
+
+        function populateExplorerCurrencySelect(currencyList) {
+            const select = document.getElementById('explorerCurrency');
+            if (!select || !Array.isArray(currencyList)) return;
+
+            if (currencyList.length === 0) {
+                select.innerHTML = '<option value="">Failed to load</option>';
+                return;
+            }
+
+            const optionsHtml = currencyList
+                .map(curr => `<option value="${curr}">${curr}</option>`)
+                .join('');
+
+            select.innerHTML = '<option value="">Select currency</option>' + optionsHtml;
+        }
+
+        async function loadExplorerCountries() {
+            const currency = document.getElementById('explorerCurrency').value.trim().toUpperCase();
+            const resultsEl = document.getElementById('explorerResults');
+            const loader = document.getElementById('explorerLoader');
+
+            if (!currency) {
+                if (resultsEl) resultsEl.innerHTML = '<div class="text-gray-500">Select a currency to see countries.</div>';
+                return;
+            }
+
+            if (loader) loader.classList.remove('hidden');
+            if (resultsEl) resultsEl.innerHTML = '<div class="text-gray-500">Loading countries...</div>';
+
+            try {
+                const url = `https://restcountries.com/v3.1/currency/${currency}?fields=name,flags,currencies`;
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const countries = await response.json();
+
+                if (!Array.isArray(countries) || countries.length === 0) {
+                    resultsEl.innerHTML = '<div class="text-gray-500">No countries found for this currency.</div>';
+                    return;
+                }
+
+                resultsEl.innerHTML = countries.map(country => {
+                    const name = country?.name?.common || 'Unknown Country';
+                    const flagUrl = country?.flags?.png || '';
+                    const currencyInfo = country?.currencies?.[currency];
+                    const currencyName = currencyInfo?.name || 'Currency';
+
+                    return `
+                        <div class="border border-gray-200 rounded-lg p-4 flex items-center gap-4">
+                            <img src="${flagUrl}" alt="${name} flag" class="w-12 h-8 object-cover rounded shadow" />
+                            <div>
+                                <div class="font-semibold text-gray-800">${name}</div>
+                                <div class="text-sm text-gray-600">${currencyName} (${currency})</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading countries:', error);
+                if (resultsEl) resultsEl.innerHTML = `<div class="text-gray-500">Failed to load countries: ${error.message}</div>`;
+            } finally {
+                if (loader) loader.classList.add('hidden');
+            }
+        }
+
+        function populateTransactionCurrencySelects(currencyList) {
+            const fromSelect = document.getElementById('convertFrom');
+            const toSelect = document.getElementById('convertTo');
+
+            if (!fromSelect || !toSelect || !Array.isArray(currencyList)) return;
+
+            if (currencyList.length === 0) {
+                fromSelect.innerHTML = '<option value="">Failed to load</option>';
+                toSelect.innerHTML = '<option value="">Failed to load</option>';
+                return;
+            }
+
+            const optionsHtml = currencyList
+                .map(curr => `<option value="${curr}">${curr}</option>`)
+                .join('');
+
+            fromSelect.innerHTML = '<option value="">Select currency</option>' + optionsHtml;
+            toSelect.innerHTML = '<option value="">Select currency</option>' + optionsHtml;
+
+            if (currencyList.includes('USD')) fromSelect.value = 'USD';
+            if (currencyList.includes('EUR')) toSelect.value = 'EUR';
+        }
+
+        async function convertCurrencyMain() {
+            console.log('Convert button clicked!');
+            
+            const from = document.getElementById('fromCurrencyInput').value.trim().toUpperCase();
+            const to = document.getElementById('toCurrencyInput').value.trim().toUpperCase();
+            const amount = document.getElementById('convertAmountInput').value;
+
+            console.log('Conversion params:', {from, to, amount});
+
+            if (!from || !to || !amount) {
+                alert('Please fill all fields');
+                return;
+            }
+            
+            const loader = document.getElementById('convertLoader');
+            const resultEl = document.getElementById('conversionResultText');
+            
+            if (!resultEl) {
+                console.error('Result element not found!');
+                return;
+            }
+            
+            loader.classList.remove('hidden');
+            resultEl.textContent = 'Converting...';
+            
+            try {
+                const url = `https://2p9nh463r1.execute-api.us-east-1.amazonaws.com/prod/convert?from=${from}&to=${to}&amount=${amount}`;
+                console.log('Fetching:', url);
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('API Response:', data);
+                
+                // The API returns result field directly
+                const result = data.result;
+                if (!result && result !== 0) {
+                    throw new Error('No result in response');
+                }
+                
+                // Format the result to 2 decimal places
+                const formattedResult = parseFloat(result).toFixed(2);
+                resultEl.textContent = `${amount} ${from} = ${formattedResult} ${to}`;
+                console.log('Result displayed:', resultEl.textContent);
+            } catch (error) {
+                console.error('Error converting currency:', error);
+                resultEl.textContent = `Error: ${error.message}`;
+            } finally {
+                loader.classList.add('hidden');
+            }
+        }
+
         async function loadFromCountriesByCurrency(currencyCode) {
             if (!currencyCode || currencyCode.length !== 3) {
                 document.getElementById('fromCountriesSection').classList.add('hidden');
+                return;
+            }
+
+            // Check cache first
+            if (fromCountriesCache[currencyCode]) {
+                const countriesList = document.getElementById('fromCountriesList');
+                const selectedCurrency = document.getElementById('fromSelectedCurrency');
+                const section = document.getElementById('fromCountriesSection');
+                const loader = document.getElementById('fromCountriesLoader');
+                
+                section.classList.remove('hidden');
+                selectedCurrency.textContent = currencyCode.toUpperCase();
+                countriesList.innerHTML = fromCountriesCache[currencyCode];
+                loader.classList.add('hidden');
                 return;
             }
 
@@ -182,7 +1018,7 @@
             countriesList.innerHTML = '<p class="col-span-full text-gray-500 text-center py-4">Loading countries...</p>';
             
             try {
-                const response = await fetch(`https://restcountries.com/v3.1/currency/${currencyCode}`);
+                const response = await fetch(`https://restcountries.com/v3.1/currency/${currencyCode}?fields=name,flags`);
                 
                 if (!response.ok) {
                     throw new Error('Currency not found');
@@ -190,23 +1026,27 @@
                 
                 const countries = await response.json();
                 
-                if (countries.length === 0) {
+                if (!countries || countries.length === 0) {
                     countriesList.innerHTML = '<p class="col-span-full text-gray-500 text-center py-4">No countries found</p>';
                     return;
                 }
                 
-                // Sort countries alphabetically
                 countries.sort((a, b) => a.name.common.localeCompare(b.name.common));
                 
-                countriesList.innerHTML = countries.map(country => `
+                const html = countries.map(country => `
                     <div class="flex flex-col items-center p-3 border border-gray-300 rounded hover:bg-gray-50 transition">
                         <img src="${country.flags.svg}" 
                              alt="${country.name.common} flag" 
                              class="w-16 h-12 object-cover rounded shadow mb-2"
+                             loading="lazy"
                              onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2280%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%2280%22/%3E%3C/svg%3E'">
                         <span class="text-xs text-center font-medium text-gray-700">${country.name.common}</span>
                     </div>
                 `).join('');
+                
+                // Cache the result
+                fromCountriesCache[currencyCode] = html;
+                countriesList.innerHTML = html;
             } catch (error) {
                 console.error('Error loading countries:', error);
                 countriesList.innerHTML = '<p class="col-span-full text-gray-500 text-center py-4">No countries found for this currency</p>';
@@ -215,10 +1055,23 @@
             }
         }
 
-        // Fetch and display countries using a currency (for "to" currency)
         async function loadToCountriesByCurrency(currencyCode) {
             if (!currencyCode || currencyCode.length !== 3) {
                 document.getElementById('toCountriesSection').classList.add('hidden');
+                return;
+            }
+
+            // Check cache first
+            if (toCountriesCache[currencyCode]) {
+                const loader = document.getElementById('toCountriesLoader');
+                const countriesList = document.getElementById('toCountriesList');
+                const selectedCurrency = document.getElementById('toSelectedCurrency');
+                const section = document.getElementById('toCountriesSection');
+                
+                section.classList.remove('hidden');
+                selectedCurrency.textContent = currencyCode.toUpperCase();
+                countriesList.innerHTML = toCountriesCache[currencyCode];
+                loader.classList.add('hidden');
                 return;
             }
 
@@ -233,7 +1086,7 @@
             countriesList.innerHTML = '<p class="col-span-full text-gray-500 text-center py-4">Loading countries...</p>';
             
             try {
-                const response = await fetch(`https://restcountries.com/v3.1/currency/${currencyCode}`);
+                const response = await fetch(`https://restcountries.com/v3.1/currency/${currencyCode}?fields=name,flags`);
                 
                 if (!response.ok) {
                     throw new Error('Currency not found');
@@ -241,23 +1094,27 @@
                 
                 const countries = await response.json();
                 
-                if (countries.length === 0) {
+                if (!countries || countries.length === 0) {
                     countriesList.innerHTML = '<p class="col-span-full text-gray-500 text-center py-4">No countries found</p>';
                     return;
                 }
                 
-                // Sort countries alphabetically
                 countries.sort((a, b) => a.name.common.localeCompare(b.name.common));
                 
-                countriesList.innerHTML = countries.map(country => `
+                const html = countries.map(country => `
                     <div class="flex flex-col items-center p-3 border border-gray-300 rounded hover:bg-gray-50 transition">
                         <img src="${country.flags.svg}" 
                              alt="${country.name.common} flag" 
                              class="w-16 h-12 object-cover rounded shadow mb-2"
+                             loading="lazy"
                              onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2280%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%2280%22/%3E%3C/svg%3E'">
                         <span class="text-xs text-center font-medium text-gray-700">${country.name.common}</span>
                     </div>
                 `).join('');
+                
+                // Cache the result
+                toCountriesCache[currencyCode] = html;
+                countriesList.innerHTML = html;
             } catch (error) {
                 console.error('Error loading countries:', error);
                 countriesList.innerHTML = '<p class="col-span-full text-gray-500 text-center py-4">No countries found for this currency</p>';
@@ -266,253 +1123,257 @@
             }
         }
 
-        // Debounce function for "from" currency input
         let fromDebounceTimer;
+        let fromCountriesCache = {};
         function handleFromCurrencyInput(event) {
             clearTimeout(fromDebounceTimer);
             const currencyCode = event.target.value.trim().toUpperCase();
             
-            // Wait 500ms after user stops typing
             fromDebounceTimer = setTimeout(() => {
                 if (currencyCode.length === 3) {
-                    loadFromCountriesByCurrency(currencyCode);
+                    // Don't reload if already loaded
+                    if (!fromCountriesCache[currencyCode]) {
+                        loadFromCountriesByCurrency(currencyCode);
+                    }
                 }
-            }, 500);
+            }, 800);
         }
 
-        // Debounce function for "to" currency input
         let toDebounceTimer;
+        let toCountriesCache = {};
         function handleToCurrencyInput(event) {
             clearTimeout(toDebounceTimer);
             const currencyCode = event.target.value.trim().toUpperCase();
             
-            // Wait 500ms after user stops typing
             toDebounceTimer = setTimeout(() => {
                 if (currencyCode.length === 3) {
-                    loadToCountriesByCurrency(currencyCode);
+                    // Don't reload if already loaded
+                    if (!toCountriesCache[currencyCode]) {
+                        loadToCountriesByCurrency(currencyCode);
+                    }
                 }
-            }, 500);
+            }, 800);
         }
 
-        // Convert currency
-        async function convertCurrency() {
-            const from = document.getElementById('fromCurrency').value.toUpperCase();
-            const to = document.getElementById('toCurrency').value.toUpperCase();
-            const amount = document.getElementById('amount').value;
+        // ============================================
+        // SNS EMAIL SUBSCRIPTION
+        // ============================================
 
-            console.log('Converting:', { from, to, amount });
+        async function subscribeToNotifications() {
+            const email = document.getElementById('subscribeEmail').value;
             
-            if (!from || !to || !amount) {
-                alert('Please fill all fields');
+            if (!email || !email.includes('@')) {
+                alert('Please enter a valid email address');
                 return;
             }
             
-            const loader = document.getElementById('convertLoader');
-            const resultEl = document.getElementById('result');
+            try {
+                const response = await fetch('/api/sns/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('Subscription request sent! Please check your email to confirm.');
+                    document.getElementById('subscribeEmail').value = '';
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error subscribing:', error);
+                alert('Error subscribing to notifications');
+            }
+        }
+
+        // ============================================
+        // LOAD RANDOM QUOTE
+        // ============================================
+
+        async function loadQuote() {
+            try {
+                console.log('loadQuote() called');
+                const response = await fetch('/api/quotes/random');
+                console.log('Response received:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                console.log('Quote data received:', data);
+
+                const quote = data.quote || data.content || data.text || data.message || '';
+                const author = data.author || data.by || '';
+
+                console.log('Quote text:', quote, 'Author:', author);
+
+                if (!quote) {
+                    throw new Error('No quote in response');
+                }
+
+                const formatted = author ? `"${quote}" - ${author}` : `"${quote}"`;
+                document.getElementById('quoteText').textContent = formatted;
+                console.log('Quote displayed successfully:', formatted);
+            } catch (error) {
+                console.error('Error loading quote:', error);
+                document.getElementById('quoteText').textContent = '"The secret to getting ahead is getting started." - Mark Twain';
+            }
+        }
+
+        // ============================================
+        // FILTERS
+        // ============================================
+
+        function applyFilters() {
+            const filters = {};
+            const type = document.getElementById('filterType').value;
+            const category = document.getElementById('filterCategory').value;
             
-            loader.classList.remove('hidden');
+            if (type) filters.type = type;
+            if (category) filters.category = category;
+            
+            loadTransactions(filters);
+        }
+
+        function populateCategoryFilter() {
+            const categories = [...new Set(transactions.map(t => t.category))].sort();
+            const select = document.getElementById('filterCategory');
+            
+            if (select) {
+                select.innerHTML = '<option value="">All Categories</option>' + 
+                    categories.map(c => `<option value="${c}">${c}</option>`).join('');
+            }
+        }
+
+        // ============================================
+        // TRANSACTION CURRENCY CONVERTER
+        // ============================================
+
+        async function convertCurrencyInForm() {
+            const from = document.getElementById('convertFrom').value;
+            const to = document.getElementById('convertTo').value;
+            const amount = document.getElementById('convertAmount').value;
+
+            if (!from || !to || !amount) {
+                const resultEl = document.getElementById('transactionConversionResult');
+                if (resultEl) {
+                    resultEl.textContent = 'Select currencies and enter amount';
+                }
+                alert('Please fill all converter fields');
+                return;
+            }
+
+            const loader = document.getElementById('transactionConvertLoader');
+            const resultEl = document.getElementById('transactionConversionResult');
+            
+            if (!resultEl) {
+                console.error('Result element not found!');
+                return;
+            }
+            
+            if (loader) loader.classList.remove('hidden');
             resultEl.textContent = 'Converting...';
             
             try {
-                const response = await fetch(`https://2p9nh463r1.execute-api.us-east-1.amazonaws.com/prod/convert?from=${from}&to=${to}&amount=${amount}`);
+                const url = `https://2p9nh463r1.execute-api.us-east-1.amazonaws.com/prod/convert?from=${from}&to=${to}&amount=${amount}`;
+                console.log('Fetching:', url);
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
-                currentResult = data.result;
-                resultEl.textContent = `${amount} ${from} = ${data.result} ${to}`;
+                console.log('API Response:', data);
+                
+                // The API returns result field directly
+                const result = data.result;
+                if (!result && result !== 0) {
+                    throw new Error('No result in response');
+                }
+                
+                // Format the result to 2 decimal places
+                const formattedResult = parseFloat(result).toFixed(2);
+                resultEl.textContent = `${amount} ${from} = ${formattedResult} ${to}`;
+                console.log('Result displayed:', resultEl.textContent);
+                
+                // Store the conversion data for when user saves the transaction
+                document.getElementById('transactionConvertedAmount').value = formattedResult;
+                document.getElementById('transactionToCurrency').value = to;
             } catch (error) {
                 console.error('Error converting currency:', error);
-                resultEl.textContent = 'Error';
-                alert('Error converting currency');
+                resultEl.textContent = `Error: ${error.message}`;
             } finally {
-                loader.classList.add('hidden');
+                if (loader) loader.classList.add('hidden');
             }
         }
 
-        // Load all conversion records
-        async function loadRecords() {
-            const loader = document.getElementById('recordsLoader');
-            loader.classList.remove('hidden');
-            
-            try {
-                const response = await fetch('/api/conversions');
-                const records = await response.json();
-                
-                const recordsList = document.getElementById('recordsList');
-                if (records.length === 0) {
-                    recordsList.innerHTML = '<p class="text-gray-500 text-center py-4">No saved conversions</p>';
-                    return;
-                }
-                
-                recordsList.innerHTML = records.map(record => `
-                    <div class="border border-gray-300 rounded mb-3 p-3">
-                        <div class="flex justify-between items-start mb-2">
-                            <div>
-                                <div class="font-semibold text-gray-800">
-                                    ${record.amount} ${record.from} = ${record.result} ${record.to}
-                                </div>
-                                <div class="text-xs text-gray-600 mt-1">
-                                    Created: ${new Date(record.createdAt).toLocaleString()}<br>
-                                    Updated: ${new Date(record.updatedAt).toLocaleString()}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex gap-2 mt-2">
-                            <button onclick="editRecord('${record._id}')" 
-                                    class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 text-sm rounded">
-                                Edit
-                            </button>
-                            <button onclick="deleteRecord('${record._id}')" 
-                                    class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 text-sm rounded">
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
-            } catch (error) {
-                console.error('Error loading records:', error);
-            } finally {
-                loader.classList.add('hidden');
-            }
-        }
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
 
-        // Save conversion record
-        async function saveRecord(event) {
-            event.preventDefault();
-            
-            const editId = document.getElementById('editId').value;
-            const data = {
-                from: document.getElementById('fromCurrency').value.toUpperCase(),
-                to: document.getElementById('toCurrency').value.toUpperCase(),
-                amount: parseFloat(document.getElementById('amount').value),
-                result: currentResult
-            };
-            console.log('Saving record:', data);
-            if (currentResult === 0) {
-                alert('Please convert the currency first');
-                return;
-            }
-            
-            const loader = document.getElementById('recordsLoader');
-            loader.classList.remove('hidden');
-            
-            try {
-                let response;
-                if (editId) {
-                    response = await fetch(`/api/conversions/${editId}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(data)
-                    });
-                } else {
-                    response = await fetch('/api/conversions', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(data)
-                    });
-                }
-                
-                if (response.ok) {
-                    resetForm();
-                    loadRecords();
-                }
-            } catch (error) {
-                console.error('Error saving record:', error);
-                alert('Error saving record');
-            } finally {
-                loader.classList.add('hidden');
-            }
-        }
-
-        // Edit a record
-        async function editRecord(id) {
-            try {
-                const response = await fetch(`/api/conversions/${id}`);
-                const record = await response.json();
-                
-                document.getElementById('editId').value = record._id;
-                document.getElementById('fromCurrency').value = record.from;
-                document.getElementById('toCurrency').value = record.to;
-                document.getElementById('amount').value = record.amount;
-                const rate = (record.result / record.amount).toFixed(4);
-                document.getElementById('result').textContent = `1${record.from} = ${rate}${record.to}`;
-                currentResult = record.result;
-                
-                document.getElementById('formTitle').textContent = 'Edit Conversion';
-                document.getElementById('cancelBtn').classList.remove('hidden');
-            } catch (error) {
-                console.error('Error loading record:', error);
-            }
-        }
-
-        // Delete a record
-        async function deleteRecord(id) {
-            if (!confirm('Are you sure you want to delete this record?')) {
-                return;
-            }
-            
-            const loader = document.getElementById('recordsLoader');
-            loader.classList.remove('hidden');
-            
-            try {
-                const response = await fetch(`/api/conversions/${id}`, {
-                    method: 'DELETE'
-                });
-                
-                if (response.ok) {
-                    loadRecords();
-                }
-            } catch (error) {
-                console.error('Error deleting record:', error);
-                alert('Error deleting record');
-            } finally {
-                loader.classList.add('hidden');
-            }
-        }
-
-        // Reset form
-        function resetForm() {
-            document.getElementById('conversionForm').reset();
-            document.getElementById('editId').value = '';
-            document.getElementById('result').textContent = '--';
-            document.getElementById('formTitle').textContent = 'Currency Converter';
-            document.getElementById('cancelBtn').classList.add('hidden');
-            currentResult = 0;
-        }
-
-        // Event listeners
-        document.getElementById('convertBtn').addEventListener('click', convertCurrency);
-        document.getElementById('conversionForm').addEventListener('submit', saveRecord);
+        document.getElementById('transactionForm').addEventListener('submit', saveTransaction);
         document.getElementById('cancelBtn').addEventListener('click', resetForm);
+        document.getElementById('subscribeBtn').addEventListener('click', subscribeToNotifications);
+        document.getElementById('applyFilters').addEventListener('click', applyFilters);
         
-        // Add currency input listeners for country display
-        document.getElementById('fromCurrency').addEventListener('input', handleFromCurrencyInput);
-        document.getElementById('toCurrency').addEventListener('input', handleToCurrencyInput);
+        // Transaction currency converter
+        document.getElementById('convertTransactionBtn').addEventListener('click', convertCurrencyInForm);
+
+        // Currency explorer events
+        document.getElementById('explorerSearchBtn').addEventListener('click', loadExplorerCountries);
+        document.getElementById('explorerCurrency').addEventListener('change', loadExplorerCountries);
         
-        // Also trigger on focus to show countries for already entered currency
-        document.getElementById('fromCurrency').addEventListener('focus', function() {
-            const value = this.value.trim().toUpperCase();
-            if (value.length === 3) loadFromCountriesByCurrency(value);
-        });
-        document.getElementById('toCurrency').addEventListener('focus', function() {
-            const value = this.value.trim().toUpperCase();
-            if (value.length === 3) loadToCountriesByCurrency(value);
-        });
 
-        // Load random quote
-        async function loadQuote() {
-            try {
-                const response = await fetch('https://api.quotable.io/random');
-                const data = await response.json();
-                document.getElementById('quoteText').textContent = `" ${data.content} "`;
-            } catch (error) {
-                console.error('Error loading quote:', error);
-                document.getElementById('quoteText').textContent = 'Unable to load quote';
-            }
-        }
+        // ============================================
+        // INITIALIZE APP
+        // ============================================
 
-        // Initialize
+        // Set today's date as default
+        document.getElementById('date').valueAsDate = new Date();
+
+        // Load initial data
         loadCurrencies();
-        loadRecords();
-        loadQuote();
+        loadTransactions();
+        loadStats();
+        
+        // Load quote after a short delay to ensure DOM is ready
+        setTimeout(() => {
+            loadQuote();
+        }, 500);
+    </script>
+    
+    <!-- Direct quote loading - simpler approach -->
+    <script>
+        // This runs after all DOM elements are loaded
+        window.addEventListener('load', function() {
+            console.log('Window load event fired');
+            
+            // Try to load quote
+            const quoteEl = document.getElementById('quoteText');
+            if (quoteEl) {
+                console.log('Quote element found, fetching quote...');
+                fetch('/api/quotes/random')
+                    .then(r => r.json())
+                    .then(data => {
+                        console.log('Quote received:', data);
+                        const quote = data.quote || '';
+                        const author = data.author || '';
+                        const formatted = author ? `"${quote}" - ${author}` : `"${quote}"`;
+                        quoteEl.textContent = formatted;
+                        console.log('Quote updated:', formatted);
+                    })
+                    .catch(err => {
+                        console.error('Quote fetch error:', err);
+                        quoteEl.textContent = '"The secret to getting ahead is getting started." - Mark Twain';
+                    });
+            } else {
+                console.error('Quote element NOT found!');
+            }
+        });
     </script>
 </body>
 </html>
